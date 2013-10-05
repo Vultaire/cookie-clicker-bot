@@ -3,7 +3,7 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.1-autobuy
+// @version 0.1-ai
 // ==/UserScript==
 
 var CookieBot = function () {
@@ -130,8 +130,8 @@ var CookieBot = function () {
     }
     function tick() {
         autoBuyUpgrades();
-        autoBuyObjects();
-        //buyObjectsByRules();
+        //autoBuyObjects();
+        buyObjectsByRules();
         clickGoldenCookies();
     }
     function init() {
