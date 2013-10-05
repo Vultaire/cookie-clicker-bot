@@ -12,10 +12,17 @@ var CookieBot = function () {
 
     function hijackConfirm() {
         // Automatically hit "yes" for any confirm dialogs.
-        window.confirm = function (message) {
-            console.log('Automatically hitting "yes" for: ' + message);
-            return true;
-        }
+        // In order to work with TamperMonkey, need to inject into the
+        // page directly; can't just override.
+        var scriptBody = document.createTextNode([
+            "window.confirm = function (message) {",
+            "    console.log('Automatically hitting \"yes\" for: ' + message);",
+            "    return true;",
+            "}",
+        ].join(""))
+        var script = document.createElement("script");
+        script.appendChild(scriptBody);
+        document.body.appendChild(script);
     }
     function enableAutoClick() {
         if (autoClicker === null) {
