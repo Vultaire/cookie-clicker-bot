@@ -3,7 +3,7 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.1-ai
+// @version 0.2
 // ==/UserScript==
 
 var CookieBot = function () {
@@ -101,12 +101,17 @@ var CookieBot = function () {
         ["Factory", 100],
         ["Mine", 100],
         ["Shipment", 100],
+        ["Alchemy lab", 100],
         ["Portal", 100],
         ["Time machine", 50],
         ["Antimatter condenser", 70],
+        ["Grandma", 150],
         ["Time machine", 80],
         ["Antimatter condenser", 80],
+        ["Grandma", 175],
         ["Time machine", 100],
+        ["Antimatter condenser", 90],
+        ["Grandma", 200],
         ["Antimatter condenser", null],
     ];
 
