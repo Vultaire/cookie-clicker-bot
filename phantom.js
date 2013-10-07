@@ -10,7 +10,7 @@ function main() {
 
     console.log("Opening Cookie Clicker...");
     page.open('http://orteil.dashnet.org/cookieclicker/', function () {
-        console.log("Cookie clicker opened.");
+        console.log("Cookie Clicker opened.");
         bootStrap();
     });
 }
