@@ -61,7 +61,10 @@ function loop() {
     page.evaluate(function () {
         Game.WriteSave();
     });
-    page.render("cookies.png")
+
+    // Uncomment to render page as PNG.
+    //page.render("cookies.png")
+
     printStatus();
 
     setTimeout(loop, 5000);
