@@ -11,7 +11,7 @@ var CookieBot = function () {
     var realConfirm = window.confirm;
 
     function hijackConfirm() {
-        // Automatically hit 'yes' for any confirm dialogs.
+        // Automatically hit "yes" for any confirm dialogs.
         // In order to work with TamperMonkey, need to inject into the
         // page directly; can't just override.
         var scriptBody = document.createTextNode([
@@ -47,7 +47,7 @@ var CookieBot = function () {
                 bought = true;
                 upgrade.buy();
                 console.log("Purchased " + upgrade.name
-                            + " for " + price);
+                            + " for " + Beautify(price));
             }
         });
     }
@@ -62,7 +62,7 @@ var CookieBot = function () {
                 bought = true;
                 object.buy();
                 console.log("Purchased " + object.name
-                            + " for " + price
+                            + " for " + Beautify(price)
                             + ", current count: " + object.amount);
             }
         });
@@ -137,7 +137,7 @@ var CookieBot = function () {
                     price = object.price;
                     object.buy();
                     console.log("Purchased " + object.name
-                                + " for " + price
+                                + " for " + Beautify(price)
                                 + ", current count: " + object.amount);
                 } else {
                     // Don't do anything this time.
