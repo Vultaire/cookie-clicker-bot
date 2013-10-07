@@ -41,10 +41,13 @@ var CookieBot = function () {
         Game.UpgradesInStore.filter(function (upgrade) {
             return upgrade.unlocked && (neverBuy.indexOf(upgrade.name) === -1);
         }).map(function (upgrade) {
+            var price;
             if (!bought && (Game.cookies >= upgrade.basePrice)) {
+                price = upgrade.basePrice;
                 bought = true;
                 upgrade.buy();
-                console.log("Purchased " + upgrade.name);
+                console.log("Purchased " + upgrade.name
+                            + " for " + price);
             }
         });
     }
@@ -53,10 +56,13 @@ var CookieBot = function () {
         var objects = Game.ObjectsById.sort(function (a, b) {
             return a.price - b.price;
         }).reverse().map(function (object) {
+            var price;
             if (!bought && (Game.cookies >= object.price)) {
+                price = object.price;
                 bought = true;
                 object.buy();
                 console.log("Purchased " + object.name
+                            + " for " + price
                             + ", current count: " + object.amount);
             }
         });
@@ -125,10 +131,13 @@ var CookieBot = function () {
             var object = Game.ObjectsById.filter(function (object) {
                 return object.name === name;
             })[0];
+            var price;
             if (target === null || object.amount < target) {
                 if (Game.cookies >= object.price) {
+                    price = object.price;
                     object.buy();
                     console.log("Purchased " + object.name
+                                + " for " + price
                                 + ", current count: " + object.amount);
                 } else {
                     // Don't do anything this time.
