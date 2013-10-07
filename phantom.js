@@ -37,17 +37,23 @@ function init() {
     console.log("Injecting Greasemonkey script...");
     page.injectJs("cookie.user.js");
 
-    printCookies();
+    printStatus();
     setTimeout(loop, 5000);
 }
 
-function printCookies() {
-    log("Current cookies: " + getCookies());
+function printStatus() {
+    log("Cookies: " + getCookies() + ", Per Second: " + getCPM());
 }
 
 function getCookies() {
     return page.evaluate(function () {
-        return Game.cookies;
+        return Beautify(Game.cookies);
+    });
+}
+
+function getCPM() {
+    return page.evaluate(function () {
+        return Beautify(Game.cookiesPs, 1);
     });
 }
 
@@ -56,7 +62,7 @@ function loop() {
         Game.WriteSave();
     });
     page.render("cookies.png")
-    printCookies();
+    printStatus();
 
     setTimeout(loop, 5000);
 }
