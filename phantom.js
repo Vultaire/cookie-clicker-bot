@@ -6,13 +6,17 @@ var page;
 function main() {
     page = require('webpage').create();
     page.viewportSize = {width: 1920, height: 960};
-    page.onConsoleMessage = console.log;
+    page.onConsoleMessage = log;
 
     console.log("Opening Cookie Clicker...");
     page.open('http://orteil.dashnet.org/cookieclicker/', function () {
         console.log("Cookie clicker opened.");
         bootStrap();
     });
+}
+
+function log(msg) {
+    console.log("[" + new Date().toISOString() + "] " + msg);
 }
 
 function bootStrap() {
@@ -38,7 +42,7 @@ function init() {
 }
 
 function printCookies() {
-    console.log("[" + new Date().toISOString() + "] Current cookies: " + getCookies());
+    log("Current cookies: " + getCookies());
 }
 
 function getCookies() {
