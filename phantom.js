@@ -1,3 +1,6 @@
+// Usage for phantom.js newbies:
+// phantomjs.exe --cookies-file=phantom.js.cookies phantom.js
+
 var page;
 
 function main() {

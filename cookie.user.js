@@ -11,7 +11,7 @@ var CookieBot = function () {
     var realConfirm = window.confirm;
 
     function hijackConfirm() {
-        // Automatically hit "yes" for any confirm dialogs.
+        // Automatically hit 'yes' for any confirm dialogs.
         // In order to work with TamperMonkey, need to inject into the
         // page directly; can't just override.
         var scriptBody = document.createTextNode([
