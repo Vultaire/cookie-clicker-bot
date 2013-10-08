@@ -3,8 +3,11 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.4
+// @version 0.5
 // ==/UserScript==
+
+// Changes:
+// 0.5: Added minimum cookies-on-hand buffer for gaming the Golden Cookies.
 
 var CookieBot = function () {
     var autoClicker = null;
@@ -53,6 +56,24 @@ var CookieBot = function () {
             autoClicker = null;
         }
     }
+
+    function hasGetLucky() {
+        return Game.UpgradesById.filter(function (u) {
+            return u.name === "Get lucky";
+        })[0].bought;
+    }
+
+    function cookiesToHold() {
+        // Computes an adjustment factor, such that Golden Cookies are
+        // as effective as possible.
+        var multiplier = 60 * 20;  // Represents 20 minutes of cookies
+        if (hasGetLucky()) {
+            multiplier *= 7;  // Potential stacked multiplier with "Get Lucky" upgrade.
+        }
+        var bonusCookies = Game.cookiesPs * multiplier;
+        return bonusCookies * 10;  // Bonus cap is 10% of current cookies.
+    }
+
     function autoBuyUpgrades() {
         var neverBuy = ["Elder Covenant"];
         var bought = false;
@@ -60,7 +81,7 @@ var CookieBot = function () {
             return upgrade.unlocked && (neverBuy.indexOf(upgrade.name) === -1);
         }).map(function (upgrade) {
             var price;
-            if (!bought && (Game.cookies >= upgrade.basePrice)) {
+            if (!bought && (Game.cookies - cookiesToHold() >= upgrade.basePrice)) {
                 price = upgrade.basePrice;
                 bought = true;
                 upgrade.buy();
@@ -75,7 +96,7 @@ var CookieBot = function () {
             return a.price - b.price;
         }).reverse().map(function (object) {
             var price;
-            if (!bought && (Game.cookies >= object.price)) {
+            if (!bought && (Game.cookies - cookiesToHold() >= object.price)) {
                 price = object.price;
                 bought = true;
                 object.buy();
@@ -151,7 +172,7 @@ var CookieBot = function () {
             })[0];
             var price;
             if (target === null || object.amount < target) {
-                if (Game.cookies >= object.price) {
+                if (Game.cookies - cookiesToHold() >= object.price) {
                     price = object.price;
                     object.buy();
                     console.log("Purchased " + object.name
@@ -185,6 +206,7 @@ var CookieBot = function () {
         init: init,
         enableAutoClick: enableAutoClick,
         disableAutoClick: disableAutoClick,
+        cookiesToHold: cookiesToHold,
     };
 }();
 

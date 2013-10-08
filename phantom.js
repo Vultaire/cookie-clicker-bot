@@ -44,7 +44,8 @@ function init() {
 function printStatus() {
     var lines = [];
     lines.push("Cookies: " + getCookies()
-               + ", Cookies Per Second: " + getCPM());
+               + ", Cookies Per Second: " + getCPM()
+               + ", Cookies to keep for bonuses: " + getCookiesToHold());
     var objNames = [
         "Cursor",
         "Grandma",
@@ -83,6 +84,12 @@ function getCookies() {
 function getCPM() {
     return page.evaluate(function () {
         return Beautify(Game.cookiesPs, 1);
+    });
+}
+
+function getCookiesToHold() {
+    return page.evaluate(function () {
+        return Beautify(CookieBot.cookiesToHold());
     });
 }
 
