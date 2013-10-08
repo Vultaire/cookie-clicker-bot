@@ -10,20 +10,38 @@ var CookieBot = function () {
     var autoClicker = null;
     var realConfirm = window.confirm;
 
+    function injectScript(src) {
+        var text = document.createTextNode(src);
+        var script = document.createElement("script");
+        script.appendChild(text);
+        document.body.appendChild(script);
+    }
+
+    function hijackFunctions() {
+        hijackConfirm();
+        hijackGameParticlesAdd();
+    }
+
     function hijackConfirm() {
         // Automatically hit "yes" for any confirm dialogs.
         // In order to work with TamperMonkey, need to inject into the
         // page directly; can't just override.
-        var scriptBody = document.createTextNode([
+        injectScript([
             "window.confirm = function (message) {",
             "    console.log('Automatically hitting \"yes\" for: ' + message);",
             "    return true;",
             "}",
         ].join(""))
-        var script = document.createElement("script");
-        script.appendChild(scriptBody);
-        document.body.appendChild(script);
     }
+
+    function hijackGameParticlesAdd() {
+        var fn = Game.particlesAdd;
+        Game.particlesAdd = function (text, el) {
+            console.log("Popup: " + text)
+            return fn(text, el);
+        }
+    }
+
     function enableAutoClick() {
         if (autoClicker === null) {
             autoClicker = setInterval(Game.ClickCookie, 200);
@@ -159,7 +177,7 @@ var CookieBot = function () {
         clickGoldenCookies();
     }
     function init() {
-        hijackConfirm();
+        hijackFunctions();
         enableAutoClick();
         setInterval(tick, 500);
     }

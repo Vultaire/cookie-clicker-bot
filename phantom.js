@@ -42,7 +42,36 @@ function init() {
 }
 
 function printStatus() {
-    log("Cookies: " + getCookies() + ", Per Second: " + getCPM());
+    var lines = [];
+    lines.push("Cookies: " + getCookies()
+               + ", Cookies Per Second: " + getCPM());
+    var objNames = [
+        "Cursor",
+        "Grandma",
+        "Farm",
+        "Factory",
+        "Mine",
+        "Shipment",
+        "Alchemy lab",
+        "Portal",
+        "Time machine",
+        "Antimatter condenser",
+    ];
+    var objReport = objNames.map(function (name) {
+        var count = page.evaluate(function (name) {
+            var matches = Game.ObjectsById.filter(function (o) {
+                return o.name === name;
+            });
+            return matches[0].amount;
+        }, name);
+        return name + ": " + count;
+    });
+    lines.push(objReport.slice(0, 5).join(", "));
+    lines.push(objReport.slice(5, 10).join(", "));
+    lines = lines.map(function (line) {
+        return "    " + line;
+    });
+    log("\n" + lines.join("\n"));
 }
 
 function getCookies() {
@@ -58,9 +87,9 @@ function getCPM() {
 }
 
 function loop() {
-    page.evaluate(function () {
-        Game.WriteSave();
-    });
+    // page.evaluate(function () {
+    //     Game.WriteSave();
+    // });
 
     // Uncomment to render page as PNG.
     //page.render("cookies.png")
