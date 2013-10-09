@@ -44,11 +44,16 @@ function init(clicksPerSecond) {
         phantomJsClickRate = cps;
     }, clicksPerSecond);
 
-    console.log("Injecting Greasemonkey script...");
-    page.injectJs("cookie.user.js");
+    // Possible race condition... sometimes setting this variable
+    // doesn't seem to take effect.  Inserting a 1 second wait on the
+    // remainder of the init logic.
+    setTimeout(function () {
+        console.log("Injecting Greasemonkey script...");
+        page.injectJs("cookie.user.js");
 
-    printStatus();
-    setTimeout(loop, 5000);
+        printStatus();
+        setTimeout(loop, 5000);
+    }, 1000);
 }
 
 function printStatus() {

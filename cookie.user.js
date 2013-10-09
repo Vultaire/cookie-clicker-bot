@@ -3,10 +3,13 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.7
+// @version 0.8
 // ==/UserScript==
 
 // Changes:
+//
+// 0.8: Embarassing error.  Put the click parameter in the wrong
+//      place.  Oops.
 //
 // 0.7: PhantomJS testing support: can effectively parameterize
 //      startup by injecting a variable before loading the main
@@ -56,7 +59,13 @@ var CookieBot = function () {
 
     function enableAutoClick() {
         if (autoClicker === null) {
-            autoClicker = setInterval(Game.ClickCookie, 200);
+            var clickInterval = 200;
+            if (phantomJsClickRate) {
+                console.log("PhantomJS click rate detected; setting to "
+                            + phantomJsClickRate + " clicks per second.");
+                clickInterval = 1000 / phantomJsClickRate;
+            }
+            autoClicker = setInterval(Game.ClickCookie, clickInterval);
         }
     }
     function disableAutoClick() {
@@ -219,13 +228,7 @@ var CookieBot = function () {
     function init() {
         hijackFunctions();
         enableAutoClick();
-        var clickInterval = 500;
-        if (phantomJsClickRate) {
-            console.log("PhantomJS click rate detected; setting to "
-                        + phantomJsClickRate + " clicks per second.");
-            clickInterval = 1000 / phantomJsClickRate;
-        }
-        setInterval(tick, clickInterval);
+        setInterval(tick, 500);
     }
     return {
         init: init,
