@@ -200,7 +200,13 @@ var CookieBot = function () {
     function init() {
         hijackFunctions();
         enableAutoClick();
-        setInterval(tick, 500);
+        var clickInterval = 500;
+        if (phantomjsClickRate) {
+            console.log("PhantomJS click rate detected; setting to "
+                        + phantomjsClickRate + " clicks per second.");
+            clickInterval = 1000 / phantomjsClickRate;
+        }
+        setInterval(tick, clickInterval);
     }
     return {
         init: init,

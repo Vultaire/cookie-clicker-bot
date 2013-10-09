@@ -4,6 +4,7 @@
 var page;
 
 function main() {
+    var system = require('system');
     page = require('webpage').create();
     page.viewportSize = {width: 1920, height: 960};
     page.onConsoleMessage = log;
@@ -11,7 +12,11 @@ function main() {
     console.log("Opening Cookie Clicker...");
     page.open('http://orteil.dashnet.org/cookieclicker/', function () {
         console.log("Cookie Clicker opened.");
-        bootStrap();
+        if (system.args.length > 1) {
+            bootStrap(system.args[1]);
+        } else {
+            bootStrap();
+        }
     });
 }
 
@@ -19,9 +24,9 @@ function log(msg) {
     console.log("[" + new Date().toISOString() + "] " + msg);
 }
 
-function bootStrap() {
+function bootStrap(clicksPerSecond) {
     if (gameLoaded()) {
-        init();
+        init(clicksPerSecond);
     } else {
         setTimeout(bootStrap, 200);
     }
@@ -33,7 +38,12 @@ function gameLoaded() {
     });
 }
 
-function init() {
+function init(clicksPerSecond) {
+    console.log("Setting PhantomJS click rate parameter...");
+    page.evaluate(function (cps) {
+        phantomjsClickRate = cps;
+    }, clicksPerSecond);
+
     console.log("Injecting Greasemonkey script...");
     page.injectJs("cookie.user.js");
 
