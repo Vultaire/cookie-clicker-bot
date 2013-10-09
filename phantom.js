@@ -41,7 +41,7 @@ function gameLoaded() {
 function init(clicksPerSecond) {
     console.log("Setting PhantomJS click rate parameter...");
     page.evaluate(function (cps) {
-        phantomjsClickRate = cps;
+        phantomJsClickRate = cps;
     }, clicksPerSecond);
 
     console.log("Injecting Greasemonkey script...");
@@ -54,8 +54,8 @@ function init(clicksPerSecond) {
 function printStatus() {
     var lines = [];
     lines.push("Cookies: " + getCookies()
-               + ", Cookies Per Second: " + getCPM()
-               + ", Cookies to keep for bonuses: " + getCookiesToHold());
+               + ", Cookies Per Second: " + getCPM());
+    lines.push("Cookies to keep for bonuses: " + getCookiesToHold());
     var objNames = [
         "Cursor",
         "Grandma",
@@ -78,7 +78,8 @@ function printStatus() {
         return name + ": " + count;
     });
     lines.push(objReport.slice(0, 5).join(", "));
-    lines.push(objReport.slice(5, 10).join(", "));
+    lines.push(objReport.slice(5, 9).join(", "));
+    lines.push(objReport[9]);
     lines = lines.map(function (line) {
         return "    " + line;
     });

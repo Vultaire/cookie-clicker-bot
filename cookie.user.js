@@ -3,10 +3,19 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.5
+// @version 0.7
 // ==/UserScript==
 
 // Changes:
+//
+// 0.7: PhantomJS testing support: can effectively parameterize
+//      startup by injecting a variable before loading the main
+//      script.  Added single parameter, phantomJsClickRate, for
+//      controlling the autoclick rate.
+//
+// 0.6: Fixed cookies-on-hand logic: CPS variable reflected Frenzy; we
+//      don't want that.
+//
 // 0.5: Added minimum cookies-on-hand buffer for gaming the Golden Cookies.
 
 var CookieBot = function () {
@@ -66,12 +75,22 @@ var CookieBot = function () {
     function cookiesToHold() {
         // Computes an adjustment factor, such that Golden Cookies are
         // as effective as possible.
+
+        // Get base cookies-per-second, i.e. accomodating for any Frenzy.
+        var realCps = Game.cookiesPs;
+        if (Game.frenzy > 0) {
+            realCps /= Game.frenzyPower;
+        }
+
+        // Compute potential CPS multiplier for Lucky.
         var multiplier = 60 * 20;  // Represents 20 minutes of cookies
         if (hasGetLucky()) {
             multiplier *= 7;  // Potential stacked multiplier with "Get Lucky" upgrade.
         }
-        var bonusCookies = Game.cookiesPs * multiplier;
-        return bonusCookies * 10;  // Bonus cap is 10% of current cookies.
+
+        var bonusCookies = realCps * multiplier;
+        var bonusCap = bonusCookies * 10;
+        return bonusCap;
     }
 
     function autoBuyUpgrades() {
@@ -201,10 +220,10 @@ var CookieBot = function () {
         hijackFunctions();
         enableAutoClick();
         var clickInterval = 500;
-        if (phantomjsClickRate) {
+        if (phantomJsClickRate) {
             console.log("PhantomJS click rate detected; setting to "
-                        + phantomjsClickRate + " clicks per second.");
-            clickInterval = 1000 / phantomjsClickRate;
+                        + phantomJsClickRate + " clicks per second.");
+            clickInterval = 1000 / phantomJsClickRate;
         }
         setInterval(tick, clickInterval);
     }
