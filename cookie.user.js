@@ -3,10 +3,13 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.13
+// @version 0.14
 // ==/UserScript==
 
 // Changes:
+//
+// 0.14: Updated soft reset to consider total cookies made across all
+//       resets.
 //
 // 0.13: Changed "hold buffer" lower bound to 1 billion CPS.
 //
@@ -261,7 +264,8 @@ var CookieBot = function () {
         //          285 + p = current
         //                p = current - 285
         var targetPrestige = current - 285;
-        if (Game.HowMuchPrestige(Game.cookiesEarned) >= targetPrestige) {
+        if (Game.HowMuchPrestige(Game.cookiesEarned + Game.cookiesReset)
+            >= targetPrestige) {
             Game.Reset();
         }
     }
