@@ -3,10 +3,14 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.9
+// @version 0.10
 // ==/UserScript==
 
 // Changes:
+//
+// 0.10: Added auto-soft-reset when enough cookies have been made to
+//       double the end-game income.  (Based upon current max
+//       multiplier of 470% @ 0 prestige and 570% at 4+ prestige.)
 //
 // 0.9: Minor fix on a check for a possibly defined variable; should
 //      work in Chrome again.  (I don't *think* it was affecting
@@ -223,11 +227,37 @@ var CookieBot = function () {
             Game.goldenCookie.click();
         }
     }
+    function autoSoftReset() {
+        // Exceptions go here...  i.e. don't auto-reset unless you
+        // have purchased these items...  For now: don't bother.
+
+        // Begin check for whether we can double our end-game income
+        // by resetting.
+
+        var currentPrestige = Game.prestige['Heavenly chips'];
+        var base = 470;   // Using 100 (instead of 1.00) as 100%
+        // Adjust for cookie requirements which require prestige;
+        // these will be available on subsequent runs through.
+        base += (25 * Math.min(4, currentPrestige));
+        current = base + (2*currentPrestige);  // Current raw multiplier
+
+        // Next: 2*current
+        // Next base: 570 (for sure)
+        // next: 570 + 2p = 2(current)
+        //       2(285 + p) = 2(current)
+        //          285 + p = current
+        //                p = current - 285
+        var targetPrestige = current - 285;
+        if (Game.HowMuchPrestige(Game.cookies) >= targetPrestige) {
+            Game.Reset();
+        }
+    }
     function tick() {
         autoBuyUpgrades();
         //autoBuyObjects();
         buyObjectsByRules();
         clickGoldenCookies();
+        autoSoftReset();
     }
     function init() {
         hijackFunctions();
