@@ -3,10 +3,15 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.11
+// @version 0.13
 // ==/UserScript==
 
 // Changes:
+//
+// 0.13: Changed "hold buffer" lower bound to 1 billion CPS.
+//
+// 0.12: Added a tweak: the cookie "hold buffer" only takes effect if
+//       you are making at least a million cookies per second.
 //
 // 0.11: Fixed auto-soft-reset comparison.
 //
@@ -94,6 +99,12 @@ var CookieBot = function () {
     function cookiesToHold() {
         // Computes an adjustment factor, such that Golden Cookies are
         // as effective as possible.
+
+        // Early game, this just gets in the way, so skip unless our
+        // CPS is at a certain level.  Let's say... 1 billion.
+        if (Game.cookiesPs < 1000000000) {
+            return 0;
+        }
 
         // Get base cookies-per-second, i.e. accomodating for any Frenzy.
         var realCps = Game.cookiesPs;
