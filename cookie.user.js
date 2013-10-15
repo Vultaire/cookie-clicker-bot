@@ -3,10 +3,13 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.14
+// @version 0.15
 // ==/UserScript==
 
 // Changes:
+//
+// 0.15: Fixed the purchase rule list: it now gets re-initialized
+//       after resetting.
 //
 // 0.14: Updated soft reset to consider total cookies made across all
 //       resets.
@@ -93,6 +96,66 @@ var CookieBot = function () {
         }
     }
 
+    var objectShoppingOrder = null;
+
+    function initPurchaseRules() {
+        objectShoppingOrder = [
+            // Syntax: [object, buy-up-to]
+            // i.e. if I have 20 cursors and buy-up-to is 50, I buy 30 cursors.
+            // If buy-up-to is null, means to just keep buying.
+            ["Cursor", 5],
+            ["Grandma", 3],
+            ["Farm", 3],
+            ["Cursor", 20],
+            ["Factory", 3],
+            ["Mine", 3],
+            ["Cursor", 50],
+            ["Grandma", 10],
+            ["Farm", 10],
+            ["Shipment", 5],
+            ["Factory", 10],
+            ["Mine", 10],
+            ["Shipment", 10],
+            ["Alchemy lab", 5],
+            ["Portal", 10],
+            ["Alchemy lab", 10],
+            ["Time machine", 20],
+            ["Cursor", 100],
+            ["Antimatter condenser", 30],
+            ["Grandma", 50],
+            ["Cursor", 130],
+            ["Antimatter condenser", 40],
+            ["Farm", 50],
+            ["Factory", 50],
+            ["Mine", 50],
+            ["Shipment", 50],
+            ["Cursor", 150],
+            ["Antimatter condenser", 50],
+            ["Alchemy lab", 50],
+            ["Portal", 50],
+            ["Time machine", 30],
+            ["Cursor", 200],
+            ["Antimatter condenser", 60],
+            ["Grandma", 128],
+            ["Farm", 128],
+            ["Factory", 100],
+            ["Mine", 100],
+            ["Shipment", 100],
+            ["Alchemy lab", 100],
+            ["Portal", 100],
+            ["Time machine", 50],
+            ["Antimatter condenser", 70],
+            ["Grandma", 150],
+            ["Time machine", 80],
+            ["Antimatter condenser", 80],
+            ["Grandma", 175],
+            ["Time machine", 100],
+            ["Antimatter condenser", 90],
+            ["Grandma", 200],
+            ["Antimatter condenser", null],
+        ];
+    }
+
     function hasGetLucky() {
         return Game.UpgradesById.filter(function (u) {
             return u.name === "Get lucky";
@@ -159,62 +222,6 @@ var CookieBot = function () {
         });
     }
 
-    var objectShoppingOrder = [
-        // Syntax: [object, buy-up-to]
-        // i.e. if I have 20 cursors and buy-up-to is 50, I buy 30 cursors.
-        // If buy-up-to is null, means to just keep buying.
-        ["Cursor", 5],
-        ["Grandma", 3],
-        ["Farm", 3],
-        ["Cursor", 20],
-        ["Factory", 3],
-        ["Mine", 3],
-        ["Cursor", 50],
-        ["Grandma", 10],
-        ["Farm", 10],
-        ["Shipment", 5],
-        ["Factory", 10],
-        ["Mine", 10],
-        ["Shipment", 10],
-        ["Alchemy lab", 5],
-        ["Portal", 10],
-        ["Alchemy lab", 10],
-        ["Time machine", 20],
-        ["Cursor", 100],
-        ["Antimatter condenser", 30],
-        ["Grandma", 50],
-        ["Cursor", 130],
-        ["Antimatter condenser", 40],
-        ["Farm", 50],
-        ["Factory", 50],
-        ["Mine", 50],
-        ["Shipment", 50],
-        ["Cursor", 150],
-        ["Antimatter condenser", 50],
-        ["Alchemy lab", 50],
-        ["Portal", 50],
-        ["Time machine", 30],
-        ["Cursor", 200],
-        ["Antimatter condenser", 60],
-        ["Grandma", 128],
-        ["Farm", 128],
-        ["Factory", 100],
-        ["Mine", 100],
-        ["Shipment", 100],
-        ["Alchemy lab", 100],
-        ["Portal", 100],
-        ["Time machine", 50],
-        ["Antimatter condenser", 70],
-        ["Grandma", 150],
-        ["Time machine", 80],
-        ["Antimatter condenser", 80],
-        ["Grandma", 175],
-        ["Time machine", 100],
-        ["Antimatter condenser", 90],
-        ["Grandma", 200],
-        ["Antimatter condenser", null],
-    ];
-
     function buyObjectsByRules() {
         while (true) {
             var name = objectShoppingOrder[0][0];
@@ -267,6 +274,7 @@ var CookieBot = function () {
         if (Game.HowMuchPrestige(Game.cookiesEarned + Game.cookiesReset)
             >= targetPrestige) {
             Game.Reset();
+            initPurchaseRules();
         }
     }
     function tick() {
@@ -279,6 +287,7 @@ var CookieBot = function () {
     function init() {
         hijackFunctions();
         enableAutoClick();
+        initPurchaseRules();
         setInterval(tick, 500);
     }
     return {
