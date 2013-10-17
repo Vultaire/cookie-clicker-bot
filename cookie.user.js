@@ -3,10 +3,15 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.19
+// @version 0.20
 // ==/UserScript==
 
 // Changes:
+//
+// 0.20: Tweaked auto-purchase logic so it makes smarter decisions
+//   end-game.  (The stock 5 minute decision period breaks down at
+//   about 90+ antimatter condensers, and likely much sooner w/o
+//   prestige.)
 //
 // 0.19: Minor fix: since Object.cps can supposedly be either a direct
 //   value or a function, using Object.storedCps in calculations
@@ -258,7 +263,19 @@ var CookieBot = function () {
         return o.price/o.storedCps;
     }
     function autoBuyObjects() {
-        var cookiesInFiveMinutes = Game.cookies + (Game.cookiesPs * 60 * 5);
+        var minutes;
+        var condensers = Game.Objects['Antimatter condenser'].amount;
+        if (condensers < 1) {
+            minutes = 5;      // Decent early game setting
+        } else if (condensers < 100) {
+            minutes = 60;     // Once condensers are in play, they're
+                              // basically the best.  Give plenty of
+                              // time for purchasing them.
+        } else {
+            minutes = 60*24;  // Essentially: pick the best gain/cost
+                              // regardless of time.
+        }
+        var cookiesInFiveMinutes = Game.cookies + (Game.cookiesPs * 60 * minutes);
         var candidates = Game.ObjectsById.sort(function (a, b) {
             return pricePerCps(a) - pricePerCps(b);
         }).filter(function (o) {
