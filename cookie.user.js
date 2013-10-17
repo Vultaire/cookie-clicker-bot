@@ -3,10 +3,14 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.18
+// @version 0.19
 // ==/UserScript==
 
 // Changes:
+//
+// 0.19: Minor fix: since Object.cps can supposedly be either a direct
+//   value or a function, using Object.storedCps in calculations
+//   instead.
 //
 // 0.18: Bug fix... now the last change should actually work.
 //
@@ -251,7 +255,7 @@ var CookieBot = function () {
 
     function pricePerCps(o) {
         // Returns price/CPS ratio.
-        return o.price/o.cps();
+        return o.price/o.storedCps;
     }
     function autoBuyObjects() {
         var cookiesInFiveMinutes = Game.cookies + (Game.cookiesPs * 60 * 5);
