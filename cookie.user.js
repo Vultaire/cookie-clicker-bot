@@ -3,44 +3,49 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.15
+// @version 0.16
 // ==/UserScript==
 
 // Changes:
 //
+// 0.16: Added new auto-purchase logic: uses a simple algorithm for
+//   deciding a purchase based upon the ratio of cookies-per-minute
+//   gain against the cost of the upgrade.
+//
 // 0.15: Fixed the purchase rule list: it now gets re-initialized
-//       after resetting.
+//   after resetting.
 //
 // 0.14: Updated soft reset to consider total cookies made across all
-//       resets.
+//   resets.
 //
 // 0.13: Changed "hold buffer" lower bound to 1 billion CPS.
 //
 // 0.12: Added a tweak: the cookie "hold buffer" only takes effect if
-//       you are making at least a million cookies per second.
+//   you are making at least a million cookies per second.
 //
 // 0.11: Fixed auto-soft-reset comparison.
 //
 // 0.10: Added auto-soft-reset when enough cookies have been made to
-//       double the end-game income.  (Based upon current max
-//       multiplier of 470% @ 0 prestige and 570% at 4+ prestige.)
+//   double the end-game income.  (Based upon current max multiplier
+//   of 470% @ 0 prestige and 570% at 4+ prestige.)
 //
 // 0.9: Minor fix on a check for a possibly defined variable; should
-//      work in Chrome again.  (I don't *think* it was affecting
-//      FireFox, but not sure.)
+//   work in Chrome again.  (I don't *think* it was affecting FireFox,
+//   but not sure.)
 //
 // 0.8: Embarassing error.  Put the click parameter in the wrong
-//      place.  Oops.
+//   place.  Oops.
 //
 // 0.7: PhantomJS testing support: can effectively parameterize
-//      startup by injecting a variable before loading the main
-//      script.  Added single parameter, phantomJsClickRate, for
-//      controlling the autoclick rate.
+//   startup by injecting a variable before loading the main script.
+//   Added single parameter, phantomJsClickRate, for controlling the
+//   autoclick rate.
 //
 // 0.6: Fixed cookies-on-hand logic: CPS variable reflected Frenzy; we
-//      don't want that.
+//   don't want that.
 //
-// 0.5: Added minimum cookies-on-hand buffer for gaming the Golden Cookies.
+// 0.5: Added minimum cookies-on-hand buffer for gaming the Golden
+//   Cookies.
 
 var CookieBot = function () {
     var autoClicker = null;
@@ -205,21 +210,34 @@ var CookieBot = function () {
             }
         });
     }
+    function pricePerCps(o) {
+        // Returns price/CPS ratio.
+        return o.price/o.cps();
+    }
     function autoBuyObjects() {
-        var bought = false;
-        var objects = Game.ObjectsById.sort(function (a, b) {
-            return a.price - b.price;
-        }).reverse().map(function (object) {
-            var price;
-            if (!bought && (Game.cookies - cookiesToHold() >= object.price)) {
-                price = object.price;
-                bought = true;
-                object.buy();
-                console.log("Purchased " + object.name
-                            + " for " + Beautify(price)
-                            + ", current count: " + object.amount);
-            }
+        var cookiesInFiveMinutes = Game.cookies + (Game.cookiesPs * 60 * 5);
+        var candidates = Game.ObjectsById.sort(function (a, b) {
+            return pricePerCps(a) - pricePerCps(b);
+        }).filter(function (o) {
+            return cookiesInFiveMinutes > o.price + cookiesToHold();
         });
+        // candidates.map(function (o) {
+        //     console.log("Candidate: " + o.name
+        //                 + " (" + pricePerCps(o) + " price/CPS)");
+        // });
+        if (candidates.length > 0) {
+            var object = candidates[0];
+            if (Game.cookies - cookiesToHold() >= object.price) {
+                object.buy();
+                console.log(">>> Purchased " + object.name
+                            + " for " + Beautify(object.price)
+                            + ", current count: " + object.amount);
+            } // else {
+            //     console.log("Waiting on " + object.name
+            //                 + ", price: " + Beautify(object.price)
+            //                 + ", price/CPS: " + pricePerCps(object));
+            // }
+        }
     }
 
     function buyObjectsByRules() {
@@ -232,10 +250,9 @@ var CookieBot = function () {
             var price;
             if (target === null || object.amount < target) {
                 if (Game.cookies - cookiesToHold() >= object.price) {
-                    price = object.price;
                     object.buy();
                     console.log("Purchased " + object.name
-                                + " for " + Beautify(price)
+                                + " for " + Beautify(object.price)
                                 + ", current count: " + object.amount);
                 } else {
                     // Don't do anything this time.
@@ -279,8 +296,8 @@ var CookieBot = function () {
     }
     function tick() {
         autoBuyUpgrades();
-        //autoBuyObjects();
-        buyObjectsByRules();
+        autoBuyObjects();
+        //buyObjectsByRules();
         clickGoldenCookies();
         autoSoftReset();
     }
