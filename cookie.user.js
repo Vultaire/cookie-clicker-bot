@@ -3,10 +3,14 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.16
+// @version 0.17
 // ==/UserScript==
 
 // Changes:
+//
+// 0.17: Added special case upgrade purchases where the cookie buffer
+//   is ignored for particularly high-value purchases, such as kitten
+//   and heavenly chip related upgrades.
 //
 // 0.16: Added new auto-purchase logic: uses a simple algorithm for
 //   deciding a purchase based upon the ratio of cookies-per-minute
@@ -194,22 +198,55 @@ var CookieBot = function () {
         return bonusCap;
     }
 
-    function autoBuyUpgrades() {
-        var neverBuy = ["Elder Covenant"];
+    var neverBuy = ["Elder Covenant"];
+    var buyEarly = [
+        "Kitten helpers",
+        "Kitten workers",
+        "Kitten engineers",
+        "Kitten overseers",
+        "Heavenly chip secret",
+        "Heavenly cookie stand",
+        "Heavenly bakery",
+        "Heavenly confectionery",
+        "Heavenly key",
+    ];
+
+    function autoBuyPriorityUpgrades() {
+        var bought = false;
+        Game.UpgradesInStore.filter(function (upgrade) {
+            return upgrade.unlocked && (buyEarly.indexOf(upgrade.name) !== -1);
+        }).map(function (upgrade) {
+            if (!bought && (Game.cookies - cookiesToHold() >= upgrade.basePrice)) {
+                bought = true;
+                upgrade.buy();
+                console.log("Purchased " + upgrade.name
+                            + " for " + Beautify(upgrade.basePrice));
+            }
+        });
+        return bought;
+    }
+
+    function autoBuyGeneralUpgrades() {
         var bought = false;
         Game.UpgradesInStore.filter(function (upgrade) {
             return upgrade.unlocked && (neverBuy.indexOf(upgrade.name) === -1);
         }).map(function (upgrade) {
-            var price;
             if (!bought && (Game.cookies - cookiesToHold() >= upgrade.basePrice)) {
-                price = upgrade.basePrice;
                 bought = true;
                 upgrade.buy();
                 console.log("Purchased " + upgrade.name
-                            + " for " + Beautify(price));
+                            + " for " + Beautify(upgrade.basePrice));
             }
         });
+        return bought;
     }
+
+    function autoBuyUpgrades() {
+        if (!autoBuyPriorityUpgrades()) {
+            autoBuyGeneralUpgrades();
+        }
+    }
+
     function pricePerCps(o) {
         // Returns price/CPS ratio.
         return o.price/o.cps();
