@@ -3,10 +3,12 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.17
+// @version 0.18
 // ==/UserScript==
 
 // Changes:
+//
+// 0.18: Bug fix... now the last change should actually work.
 //
 // 0.17: Added special case upgrade purchases where the cookie buffer
 //   is ignored for particularly high-value purchases, such as kitten
@@ -216,7 +218,7 @@ var CookieBot = function () {
         Game.UpgradesInStore.filter(function (upgrade) {
             return upgrade.unlocked && (buyEarly.indexOf(upgrade.name) !== -1);
         }).map(function (upgrade) {
-            if (!bought && (Game.cookies - cookiesToHold() >= upgrade.basePrice)) {
+            if (!bought && (Game.cookies >= upgrade.basePrice)) {
                 bought = true;
                 upgrade.buy();
                 console.log("Purchased " + upgrade.name
