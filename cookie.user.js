@@ -235,7 +235,9 @@ var CookieBot = function () {
             } // else {
             //     console.log("Waiting on " + object.name
             //                 + ", price: " + Beautify(object.price)
-            //                 + ", price/CPS: " + pricePerCps(object));
+            //                 + ", price/CPS: " + pricePerCps(object)
+            //                 + ", will buy at: "
+            //                 + Beautify(object.price + cookiesToHold()));
             // }
         }
     }
