@@ -3,10 +3,38 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.20
+// @version 0.21
 // ==/UserScript==
 
 // Changes:
+//
+// 0.21:
+//
+//   - Added logic to get the "Neverclick" achievement.  This will slow
+//     down the early game significantly until the first million
+//     cookies are made, but again, since this is a bot it likely
+//     won't be such a big deal.  (This could also be made as a
+//     special case requiring prestige, but I opted against this for
+//     slightly simpler code.)
+//
+//   - Moved autoclick init into the neverclick achievement handler.
+//
+//   - Added logic for getting the "Cookie-dunker" achievement.  This
+//     is done by resizing the left-hand canvas where the big cookie
+//     and milk are drawn, avoiding the need to resize the actual
+//     browser.  This is about the best that can be done w/o having
+//     the AI simply cheat and award itself the achievement.
+//
+//   - Added logic for getting the "Just wrong" achievement; kicks in
+//     after you have 10 grandmas.
+//
+//   - Added logic for getting the "Elder calm" achievement, while in
+//     general not buying the elder covenant upgrade.
+//
+//   - Tweaked interval to be fast enough to get "Uncanny clicker".
+//     According to current code, Uncanny Clicker is won basically
+//     when the player exceeds 15 clicks per second (66.7 ms per
+//     click).  I went for a round number: 50 ms per click.
 //
 // 0.20: Tweaked auto-purchase logic so it makes smarter decisions
 //   end-game.  (The stock 5 minute decision period breaks down at
@@ -100,7 +128,7 @@ var CookieBot = function () {
 
     function enableAutoClick() {
         if (autoClicker === null) {
-            var clickInterval = 200;
+            var clickInterval = 50;
             if (typeof phantomJsClickRate !== "undefined") {
                 console.log("PhantomJS click rate detected; setting to "
                             + phantomJsClickRate + " clicks per second.");
@@ -114,72 +142,6 @@ var CookieBot = function () {
             clearInterval(autoClicker);
             autoClicker = null;
         }
-    }
-
-    var objectShoppingOrder = null;
-
-    function initPurchaseRules() {
-        objectShoppingOrder = [
-            // Syntax: [object, buy-up-to]
-            // i.e. if I have 20 cursors and buy-up-to is 50, I buy 30 cursors.
-            // If buy-up-to is null, means to just keep buying.
-            ["Cursor", 5],
-            ["Grandma", 3],
-            ["Farm", 3],
-            ["Cursor", 20],
-            ["Factory", 3],
-            ["Mine", 3],
-            ["Cursor", 50],
-            ["Grandma", 10],
-            ["Farm", 10],
-            ["Shipment", 5],
-            ["Factory", 10],
-            ["Mine", 10],
-            ["Shipment", 10],
-            ["Alchemy lab", 5],
-            ["Portal", 10],
-            ["Alchemy lab", 10],
-            ["Time machine", 20],
-            ["Cursor", 100],
-            ["Antimatter condenser", 30],
-            ["Grandma", 50],
-            ["Cursor", 130],
-            ["Antimatter condenser", 40],
-            ["Farm", 50],
-            ["Factory", 50],
-            ["Mine", 50],
-            ["Shipment", 50],
-            ["Cursor", 150],
-            ["Antimatter condenser", 50],
-            ["Alchemy lab", 50],
-            ["Portal", 50],
-            ["Time machine", 30],
-            ["Cursor", 200],
-            ["Antimatter condenser", 60],
-            ["Grandma", 128],
-            ["Farm", 128],
-            ["Factory", 100],
-            ["Mine", 100],
-            ["Shipment", 100],
-            ["Alchemy lab", 100],
-            ["Portal", 100],
-            ["Time machine", 50],
-            ["Antimatter condenser", 70],
-            ["Grandma", 150],
-            ["Time machine", 80],
-            ["Antimatter condenser", 80],
-            ["Grandma", 175],
-            ["Time machine", 100],
-            ["Antimatter condenser", 90],
-            ["Grandma", 200],
-            ["Antimatter condenser", null],
-        ];
-    }
-
-    function hasGetLucky() {
-        return Game.UpgradesById.filter(function (u) {
-            return u.name === "Get lucky";
-        })[0].bought;
     }
 
     function cookiesToHold() {
@@ -200,7 +162,7 @@ var CookieBot = function () {
 
         // Compute potential CPS multiplier for Lucky.
         var multiplier = 60 * 20;  // Represents 20 minutes of cookies
-        if (hasGetLucky()) {
+        if (Game.Upgrades["Get lucky"].bought) {
             multiplier *= 7;  // Potential stacked multiplier with "Get Lucky" upgrade.
         }
 
@@ -302,28 +264,6 @@ var CookieBot = function () {
         }
     }
 
-    function buyObjectsByRules() {
-        while (true) {
-            var name = objectShoppingOrder[0][0];
-            var target = objectShoppingOrder[0][1];
-            var object = Game.ObjectsById.filter(function (object) {
-                return object.name === name;
-            })[0];
-            var price;
-            if (target === null || object.amount < target) {
-                if (Game.cookies - cookiesToHold() >= object.price) {
-                    object.buy();
-                    console.log("Purchased " + object.name
-                                + " for " + Beautify(object.price)
-                                + ", current count: " + object.amount);
-                } else {
-                    // Don't do anything this time.
-                }
-                return;
-            }
-            objectShoppingOrder.shift();
-        }
-    }
     function clickGoldenCookies() {
         if (Game.goldenCookie.life > 0) {
             Game.goldenCookie.click();
@@ -352,23 +292,125 @@ var CookieBot = function () {
         var targetPrestige = current - 285;
         if (Game.HowMuchPrestige(Game.cookiesEarned + Game.cookiesReset)
             >= targetPrestige) {
+            if (! Game.Achievements['Neverclick'].won) {
+                disableAutoClick();
+            }
             Game.Reset();
-            initPurchaseRules();
         }
     }
+    var clickToFifteen = null;
+    function autoNeverClick() {
+        if (!Game.Achievements['Neverclick'].won) {
+            if (Game.cookieClicks < 15 &&
+                clickToFifteen === null) {
+                // Click up to 15, then stop.
+
+                var interval = 50;
+                function clicker() {
+                    Game.ClickCookie();
+                    if (Game.cookieClicks < 15) {
+                        clickToFifteen = setTimeout(clicker, interval);
+                    } else {
+                        clickToFifteen = null;
+                        if (Game.cookies >= 15) {
+                            Game.Objects["Cursor"].buy();
+                        }
+                    }
+                }
+                clickToFifteen = setTimeout(clicker, interval);
+            } else if (Game.cookieClicks > 15) {
+                // Too many clicks to try Neverclick; just enable.
+                enableAutoClick();
+            }
+        } else {
+            enableAutoClick();
+        }
+    }
+
+    var undunkCookie = null;
+    function autoCookieDunker() {
+        if ((!Game.Achievements["Cookie-dunker"].won)
+            && Game.milkProgress > 3.0
+            && undunkCookie === null) {
+            /*
+              Achievement basically won if:
+              - More than 10% milk.
+              - If 16 pixels or more of the big cookie are submerged below the milk line
+
+              No cross-platform way to resize window it seems, at least at quick glance.
+
+              Canvas can be resized...  This is the closest it seems we can get.
+
+             */
+
+            // Game.milkHd at high milk % will be around 35%... meaning 65% of canvas height.
+            // Exact formula to calculate:
+            // .4y + 128 - 16 > my
+            // .4y + 112 > my
+            // (.4y + 112)/y > m
+            // .4 + 112/y > m
+            // 112/y > m - .4
+            // 112 > y(m - .4)
+            // 112/(m-.4) > y
+            // y < 112/(m-.4)
+            // Where:
+            //   y: canvas height
+            //   m: milk height
+
+            var milkHeightPct = (1-Game.milkHd);
+            var dunkHeight = 112/(milkHeightPct-.4);
+            dunkHeight -= 1;  // Ensure that we set our height below
+                              // the threshold for dunking.
+
+            var oldHeight = Game.LeftBackground.canvas.height;
+            Game.LeftBackground.canvas.height = dunkHeight;
+            function undunk() {
+                Game.LeftBackground.canvas.height = oldHeight;
+            }
+            // This may take some time to register; wait 10 seconds.
+            undunkCookie = setInterval(undunk, 10000);
+        }
+    }
+
+    function autoElderCalm() {
+        var elderCovenant = Game.Upgrades["Elder Covenant"];
+        if ((!Game.Achievements["Elder calm"].won)
+            && elderCovenant.unlocked
+            && Game.cookies >= elderCovenant.basePrice) {
+
+            elderCovenant.buy();
+        }
+    }
+
+    function autoJustWrong() {
+        if ((!Game.Achievements["Just wrong"].won)
+            && Game.Objects["Grandma"].amount > 10) {
+
+            Game.Objects["Grandma"].sell();
+        }
+    }
+
+    function autoAchieve() {
+        autoNeverClick();
+        autoCookieDunker();
+        autoElderCalm();
+        autoJustWrong();
+    }
+
     function tick() {
         autoBuyUpgrades();
         autoBuyObjects();
         //buyObjectsByRules();
         clickGoldenCookies();
+        autoAchieve();
         autoSoftReset();
     }
+
     function init() {
         hijackFunctions();
-        enableAutoClick();
-        initPurchaseRules();
         setInterval(tick, 500);
     }
+
     return {
         init: init,
         enableAutoClick: enableAutoClick,
