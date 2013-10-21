@@ -3,10 +3,14 @@
 // @namespace http://vultaire.net/gmscripts
 // @description A very simple clickslave and AI bot for Cookie Clicker.
 // @include http://orteil.dashnet.org/cookieclicker/*
-// @version 0.21
+// @version 1.0
 // ==/UserScript==
 
 // Changes:
+//
+// 1.0: Same as 0.21, but since I think this is the first version
+//   capable of getting all current non-shadow achievements, it's
+//   appropriate time to up it to 1.0.
 //
 // 0.21:
 //
